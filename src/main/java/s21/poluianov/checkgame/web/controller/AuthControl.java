@@ -21,7 +21,7 @@ public class AuthControl {
 
     @RequestMapping("/")
     public ModelAndView index() {
-        return new ModelAndView("auth.html");
+        return new ModelAndView("index.html");
     }
     @PostMapping("/auth")
     public String auth(@RequestBody String str) {

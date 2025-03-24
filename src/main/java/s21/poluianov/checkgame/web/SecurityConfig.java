@@ -45,6 +45,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable).build();
                 //.authorizeHttpRequests(auth->auth.requestMatchers("/save.html").permitAll()
-                //.anyRequest().authenticated()).formLogin(form->form.loginPage("/auth.html").permitAll()).build();
+                //.anyRequest().authenticated()).formLogin(form->form.loginPage("/index.html").permitAll()).build();
     }
 }
