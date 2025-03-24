@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>Title</title>
+</head>
+<style>
+    html, body{
+        overflow: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        background: #555;
+    }
+    *{
+        margin: 0;
+        padding: 0;
+        font-size: 1.6vw;
+        text-align: center;
+    }
+    .btn button{
+        width: 100%;
+        height: auto;
+        padding: 10% 0;
+        background: palegreen;
+    }
+    button{
+        border: none;
+        border-radius: 1vw;
+    }
+    .btn button:hover{
+        background: lightseagreen;
+    }
+    .btn{
+        width: 30%;
+        height: 40%;
+        position: absolute;
+        top: 30%;
+        left: 60%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: end;
+    }
+    .playground{
+        display: grid;
+        gap: .5vh;
+        grid-template-columns: 15vw 15vw 15vw;
+        grid-template-rows: 15vw 15vw 15vw;
+        position: absolute;
+        top: 2%;
+        left: 10%;
+    }
+    .playground button{
+        background: #555;
+        border: .1vw solid white;
+    }
+</style>
+<body>
+<div class="playground">
+    <button></button> <button></button> <button></button>
+    <button></button> <button></button> <button></button>
+    <button></button> <button></button> <button></button>
+</div>
+<div class="btn">
+    <button name="duel" onclick="location.href='duel.html'">Start game with Human</button>
+    <button name="solo" onclick="location.href='solo.html';">Start game with Robot</button>
+</div>
+</body>
+<script>
+    /*onclose=function (){
+        $.ajax({
+            type: "POST", url: "/", data: {'close': 'true'}
+        });
+    }*/
+</script>
+</html>

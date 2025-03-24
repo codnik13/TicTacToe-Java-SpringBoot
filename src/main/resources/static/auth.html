@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>Title</title>
+</head>
+<style>
+    html, body{
+        overflow: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        background: #555;
+    }
+    *{
+        margin: 0;
+        padding: 0;
+        font-size: 1.6vw;
+        text-align: center;
+    }
+    button{
+        margin: 1% 0;
+        width: 30%;
+        height: 10%;
+        padding: 3% 0;
+        background: palegreen;
+        border: none;
+        border-radius: 1vw;
+    }
+    button:hover{
+        background: lightseagreen;
+    }
+    .btn{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    input{
+        margin: 1% 0;
+        width: 30%;
+        height: 10%;
+        border-radius: 1vw;
+        border: none;
+    }
+    span{
+        width: 30%;
+        height: auto;
+        color: white;
+    }
+</style>
+<body>
+<div class="btn">
+    <input type="text" id="login" maxlength="30" placeholder="type your name" required/>
+    <input type="password" id="pwd" maxlength="30" placeholder="type your password" required/>
+    <button onclick="start('1');">Log In</button>
+    <span>or</span>
+    <button onclick="start('2');">Sign Up</button>
+</div>
+</body>
+<script>
+    function start(x){
+        $.ajax({
+            type: "POST", url: "/auth",
+            data: {"select": x, "login": document.getElementById("login").value, "pwd": document.getElementById("pwd").value},
+            success: function (str){
+                if(x==1) {
+                    if (str == "fail") {
+                        alert("Wrong username or password");
+                        document.getElementById("login").value = "";
+                        document.getElementById("pwd").value = "";
+                    } else {
+                        alert(str);
+                        location.href = "home.html";
+                    }
+                } else{
+                    if(str=="fail") {
+                        alert("Such user already exists");
+                        document.getElementById("name").value="";
+                        document.getElementById("pwd").value="";
+                    }
+                    else {
+                        alert("You are successfully signed up");
+                        location.href="/";
+                    }
+                }
+            }
+        });
+    }
+</script>
+</html>

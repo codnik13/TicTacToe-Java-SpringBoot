@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+</head>
+<style>
+    html, body{
+        overflow: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        background: #555;
+    }
+    *{
+        margin: 0;
+        padding: 0;
+        font-size: 1.6vw;
+        text-align: center;
+    }
+    button{
+        border: none;
+        border-radius: 1vw;
+    }
+    .playground{
+        display: grid;
+        gap: .5vh;
+        grid-template-columns: 15vw 15vw 15vw;
+        grid-template-rows: 15vw 15vw 15vw;
+        position: absolute;
+        top: 2%;
+        left: 10%;
+    }
+    .playground button{
+        background: white;
+        color: #555;
+        font-weight: bold;
+    }
+    .playground button:hover{
+        background: antiquewhite;
+    }
+    .btn button:hover{
+        background: lightseagreen;
+    }
+    .btn{
+        width: 30%;
+        height: 40%;
+        position: absolute;
+        top: 30%;
+        left: 60%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: end;
+    }
+    .btn button:not(#message){
+        width: 100%;
+        height: auto;
+        padding: 10% 0;
+        background: palegreen;
+    }
+    #message{
+        width: 100%;
+        height: auto;
+        background: #555;
+        color: white;
+    }
+</style>
+<body>
+<div class="playground">
+    <button id="0" onclick="push('0');"></button> <button id="1" onclick="push('1');"></button> <button id="2" onclick="push('2');"></button>
+    <button id="3" onclick="push('3');"></button> <button id="4" onclick="push('4');"></button> <button id="5" onclick="push('5');"></button>
+    <button id="6" onclick="push('6');"></button> <button id="7" onclick="push('7');"></button> <button id="8" onclick="push('8');"></button>
+</div>
+<div class="btn">
+    <button id="message">Searching for opponent</button>
+    <button id="duel" onclick="location.href='duel.html';" style="display: none;">Start game with Human</button>
+    <button id="solo" onclick="location.href='solo.html'" style="display: none;">Start game with Robot</button>
+    <button id="9" onclick="push(9);">Cancel</button>
+</div>
+<div>
+    <button id="uuid" style="display: none;"></button>
+    <button id="who" style="display: none;"></button>
+</div>
+</body>
+<script>
+    onload=function (){
+        $.ajax({
+            type: "POST",  url: "/home", data: {'select': 2},
+            success: function (dataset){
+                document.getElementById("who").innerText=dataset[0];
+                document.getElementById("uuid").innerText=dataset[1];
+                if(dataset[0]=="rival")
+                    document.getElementById("message").style.display="none";
+            }
+        });
+    }
+    let cyclic=setInterval(refresher,100);
+    function refresher(){
+        $.ajax({
+            type: "POST", url: "/retrieve", data: {'id': document.getElementById("uuid").innerText},
+            success: function (dataset){
+                handler(dataset);
+            }
+        });
+    }
+    function push(x){
+        $.ajax({
+            type: "POST", url: "/duel",
+            data: {'field': x, 'id': document.getElementById("uuid").innerText, 'who': document.getElementById("who").innerText},
+            success: function(dataset){
+                handler(dataset)
+            }
+        });
+    }
+    function highlight(winLine, dataset){
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[i][j]=='X'; j++) {
+                winLine[j][0] = i;
+                winLine[j][1] = j;
+            }
+            if(j==3) return;
+            for(j=0; j<3 && dataset[i][j]=='0'; j++) {
+                winLine[j][0] = i;
+                winLine[j][1] = j;
+            }
+            if(j==3) return;
+        }
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[j][i]=='X'; j++){
+                winLine[j][0] = j;
+                winLine[j][1] = i;
+            }
+            if(j==3) return;
+            for(j=0; j<3 && dataset[j][i]=='0'; j++){
+                winLine[j][0] = j;
+                winLine[j][1] = i;
+            }
+            if(j==3) return;
+        }
+        let i=0;
+        for(; i<3 && dataset[i][i]=='X'; i++)
+            winLine[i][0] = winLine[i][1]=i;
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][i]=='0'; i++)
+            winLine[i][0] = winLine[i][1]=i;
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][3-1-i]=='X'; i++){
+            winLine[i][0] = i;
+            winLine[i][1] = 3-1-i;
+        }
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][3-1-i]=='0'; i++){
+            winLine[i][0] = i;
+            winLine[i][1] = 3-1-i;
+        }
+    }
+    function handler(dataset){
+        if(dataset[3][2]=='1'){
+            clearInterval(cyclic);
+            //location.href="home.html";
+            return;
+        }
+        if(document.getElementById("who").innerText=="creator" && dataset[3][2]!='0')
+            document.getElementById("message").style.display="none";
+        for(let i=0; i<3; i++)
+            for(let j=0; j<3; j++)
+                if(dataset[i][j]!='\0') {
+                    document.getElementById((i * 3 + j).toString()).innerText = dataset[i][j];
+                }
+        if(dataset[3][1]!='\0'){
+            clearInterval(cyclic);
+            document.getElementById("9").style.display="none";
+            document.getElementById("duel").style.display="block";
+            document.getElementById("solo").style.display="block";
+            $(".playground").children().prop('disabled',true);
+            if(dataset[3][0]!='0') {
+                if(dataset[3][0]=='9')
+                    $.ajax({
+                        type: "POST", url: "/dlt",
+                        data: {'id': document.getElementById("uuid").innerText}
+                    });
+                location.href = "home.html";
+            }
+            else{
+                document.getElementById("message").style.display="block";
+                document.getElementById("message").innerText="Canceled by opponent";
+                $.ajax({
+                    type: "POST", url: "/dlt",
+                    data: {'id': document.getElementById("uuid").innerText}
+                });
+            }
+        }
+        else if(dataset[3][0]!='\0') {
+            $(".playground").children().prop('disabled', true);
+            clearInterval(cyclic);
+            if(dataset[3][0]<3) {
+                let winLine = [[0, 0], [0, 0], [0, 0]];
+                highlight(winLine, dataset);
+                let id = winLine[0][0] * 3 + winLine[0][1];
+                document.getElementById(id.toString()).style.backgroundColor = (dataset[3][0] == '2' &&
+                document.getElementById("message").innerText!="You won" ? "tomato" : "lightgreen");
+                id = winLine[1][0] * 3 + winLine[1][1];
+                document.getElementById(id.toString()).style.backgroundColor = (dataset[3][0] == '2' &&
+                document.getElementById("message").innerText!="You won" ? "tomato" : "lightgreen");
+                id = winLine[2][0] * 3 + winLine[2][1];
+                document.getElementById(id.toString()).style.backgroundColor = (dataset[3][0] == '2' &&
+                document.getElementById("message").innerText!="You won" ? "tomato" : "lightgreen");
+                document.getElementById("9").style.display = "none";
+                document.getElementById("duel").style.display = "block";
+                document.getElementById("solo").style.display = "block";
+                document.getElementById("message").style.display = "block";
+                document.getElementById("message").innerText = (dataset[3][0] == '2' &&
+                document.getElementById("message").innerText!="You won" ? "You lost" : "You won");
+                if(dataset[3][0] == '2' && document.getElementById("message").innerText!="You won"){
+                    $.ajax({
+                        type: "POST", url: "/dlt",
+                        data: {'id': document.getElementById("uuid").innerText}
+                    });
+                }
+            }
+            else{
+                document.getElementById("9").style.display="none";
+                document.getElementById("duel").style.display="block";
+                document.getElementById("solo").style.display="block";
+                document.getElementById("message").style.display="block";
+                document.getElementById("message").innerText="No contest";
+                if(dataset[3][0] == '4' && document.getElementById("message").innerText!="No contest")
+                    $.ajax({
+                        type: "POST", url: "/dlt",
+                        data: {'id': document.getElementById("uuid").innerText}
+                    });
+            }
+        }
+    }
+</script>
+</html>

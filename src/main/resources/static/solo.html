@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+</head>
+<style>
+    html, body{
+        overflow: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        background: #555;
+    }
+    *{
+        margin: 0;
+        padding: 0;
+        font-size: 1.6vw;
+        text-align: center;
+    }
+    button{
+        border: none;
+        border-radius: 1vw;
+    }
+    .playground{
+        display: grid;
+        gap: .5vh;
+        grid-template-columns: 15vw 15vw 15vw;
+        grid-template-rows: 15vw 15vw 15vw;
+        position: absolute;
+        top: 2%;
+        left: 10%;
+    }
+    .playground button{
+        background: white;
+        color: #555;
+        font-weight: bold;
+    }
+    .playground button:hover{
+        background: antiquewhite;
+    }
+    .btn button:hover{
+        background: lightseagreen;
+    }
+    .btn{
+        width: 30%;
+        height: 40%;
+        position: absolute;
+        top: 30%;
+        left: 60%;
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: end;
+    }
+    .btn button:not(#message){
+        width: 100%;
+        height: auto;
+        padding: 10% 0;
+        background: palegreen;
+    }
+    #message{
+        width: 100%;
+        height: auto;
+        background: #555;
+        color: white;
+    }
+</style>
+<body>
+<div class="playground">
+    <button id="0" onclick="push('0');"></button> <button id="1" onclick="push('1');"></button> <button id="2" onclick="push('2');"></button>
+    <button id="3" onclick="push('3');"></button> <button id="4" onclick="push('4');"></button> <button id="5" onclick="push('5');"></button>
+    <button id="6" onclick="push('6');"></button> <button id="7" onclick="push('7');"></button> <button id="8" onclick="push('8');"></button>
+</div>
+<div class="btn">
+    <button id="message"></button>
+    <button name="duel" onclick="location.href='duel.html';">Start game with Human</button>
+    <button name="solo" onclick="location.href='solo.html';">Start game with Robot</button>
+</div>
+<div>
+    <button id="uuid" style="display: none;"></button>
+</div>
+</body>
+<script>
+    onbeforeunload=function (){
+        $.ajax({
+            type: "POST",  url: "/del", data: {'id': document.getElementById("uuid").innerText},
+        });
+    }
+    onload=function (){
+        $.ajax({
+            type: "POST",  url: "/home", data: {'select': 1},
+            success: function (dataset){
+                document.getElementById("uuid").innerText=dataset[1];
+            }
+        });
+    }
+    function push(x){
+        $.ajax({
+            type: "POST",  url: "/solo", data: {'field': x, 'id': document.getElementById("uuid").innerText},
+            success: function (dataset){
+                let count=0;
+                for(let i=0; i<3; i++)
+                    for(let j=0; j<3; j++)
+                        if(dataset[i][j]!='\0')
+                            document.getElementById((i*3+j).toString()).innerText = dataset[i][j];
+                        else count++;
+                const end=win(dataset);
+                if(end>0){
+                    let winLine=[[0,0],[0,0],[0,0]];
+                    highlight(winLine, dataset);
+                    let id=winLine[0][0]*3+winLine[0][1];
+                    document.getElementById(id.toString()).style.backgroundColor=(end==1 ? "lightgreen" : "tomato");
+                    id=winLine[1][0]*3+winLine[1][1];
+                    document.getElementById(id.toString()).style.backgroundColor=(end==1 ? "lightgreen" : "tomato");
+                    id=winLine[2][0]*3+winLine[2][1];
+                    document.getElementById(id.toString()).style.backgroundColor=(end==1 ? "lightgreen" : "tomato");
+                    document.getElementsByClassName("btn")[0].style.display="flex";
+                    if(end==1) document.getElementById("message").innerText="You won";
+                    else document.getElementById("message").innerText="You lost";
+                    $(".playground").children().prop('disabled',true);
+                }
+                else if(count==0) {
+                    document.getElementsByClassName("btn")[0].style.display="flex";
+                    document.getElementById("message").innerText="No contest";
+                    $(".playground").children().prop('disabled',true);
+                }
+            }
+        });
+    }
+    function win(dataset){
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[i][j]=='0'; j++);
+            if(j==3) return 2;
+            for(j=0; j<3 && dataset[i][j]=='X'; j++);
+            if(j==3) return 1;
+        }
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[j][i]=='0'; j++);
+            if(j==3) return 2;
+            for(j=0; j<3 && dataset[j][i]=='X'; j++);
+            if(j==3) return 1;
+        }
+        let i=0;
+        for(; i<3 && dataset[i][i]=='0'; i++);
+        if(i==3) return 2
+        for(i=0; i<3 && dataset[i][i]=='X'; i++);
+        if(i==3) return 1;
+        for(i=0; i<3 && dataset[i][3-1-i]=='0'; i++);
+        if(i==3) return 2;
+        for(i=0; i<3 && dataset[i][3-1-i]=='X'; i++);
+        if(i==3) return 1;
+        return 0;
+    }
+    function highlight(winLine, dataset){
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[i][j]=='X'; j++) {
+                winLine[j][0] = i;
+                winLine[j][1] = j;
+            }
+            if(j==3) return;
+            for(j=0; j<3 && dataset[i][j]=='0'; j++) {
+                winLine[j][0] = i;
+                winLine[j][1] = j;
+            }
+            if(j==3) return;
+        }
+        for(let i=0, j=0; i<3; i++){
+            for(j=0; j<3 && dataset[j][i]=='X'; j++){
+                winLine[j][0] = j;
+                winLine[j][1] = i;
+            }
+            if(j==3) return;
+            for(j=0; j<3 && dataset[j][i]=='0'; j++){
+                winLine[j][0] = j;
+                winLine[j][1] = i;
+            }
+            if(j==3) return;
+        }
+        let i=0;
+        for(; i<3 && dataset[i][i]=='X'; i++)
+            winLine[i][0] = winLine[i][1]=i;
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][i]=='0'; i++)
+            winLine[i][0] = winLine[i][1]=i;
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][3-1-i]=='X'; i++){
+            winLine[i][0] = i;
+            winLine[i][1] = 3-1-i;
+        }
+        if(i==3) return;
+        for(i=0; i<3 && dataset[i][3-1-i]=='0'; i++){
+            winLine[i][0] = i;
+            winLine[i][1] = 3-1-i;
+        }
+    }
+</script>
+</html>
